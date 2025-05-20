@@ -9,7 +9,7 @@ int runClient()
     sockaddr_in serverAddr;
 
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(8080);
+    serverAddr.sin_port = htons(7000);
     serverAddr.sin_addr.s_addr = INADDR_ANY;
 
     //connect
@@ -20,5 +20,12 @@ int runClient()
     send(clientSock, msg, strlen(msg), 0);
 
     close(clientSock);
+    return (0);
+}
+
+int main()
+{
+    std::cout << "webserver" << std::endl;
+    runClient();
     return (0);
 }
