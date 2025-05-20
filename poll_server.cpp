@@ -109,6 +109,11 @@ int runServer()
                         close(sockfd);
                         client[i].fd = -1;
                     }
+                    // Echo received data in the server
+                    if (write(1, buf, n) != n)
+                    {
+                        perror("write error");
+                    }
                 }
                 if (--nready <= 0)
                     break;

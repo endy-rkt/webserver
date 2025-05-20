@@ -20,6 +20,13 @@ clean:
 
 fclean: clean
 	${RM} ${NAME}
+	${RM} client server
+
+server:
+	${CXX} poll_server.cpp -o server
+
+client:
+	${CXX} client.cpp -o client
 
 re: fclean all
 
