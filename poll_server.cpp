@@ -1,7 +1,7 @@
 #include "header.hpp"
 
 #define MAXLINE 2048
-#define OPEN_MAX 1024
+#define OPEN_MAX _SC_OPEN_MAX
 #define LISTENQ 10
 
 int runServer()
@@ -62,6 +62,7 @@ int runServer()
         }
 
         // New connection
+        // POLLRDNORM = Poll Read normal we have also POLLWRNORM
         if (client[0].revents & POLLRDNORM) {
             clilen = sizeof(cliaddr);
             connfd = accept(serverSock, (struct sockaddr *)&cliaddr, &clilen);
