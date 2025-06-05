@@ -1,16 +1,35 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   header.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: trazanad <trazanad@student.42antananari    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/06/05 01:59:14 by trazanad          #+#    #+#             */
+/*   Updated: 2025/06/05 03:27:32 by trazanad         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef HEADER_HPP
 
 #define HEADER_HPP
 
-#include <cstring>
 #include <iostream>
-#include <netinet/in.h>
+
+#include <string>
+
 #include <sys/socket.h>
-#include <sys/select.h>
-#include <poll.h>
+
+#include <netinet/in.h>
+
 #include <unistd.h>
 
-int runServer();
-int runClient();
+#include <string.h>
+
+#include <cstdlib>
+
+#define PORT 8080
+
+#define LISTENQ 10
 
 #endif

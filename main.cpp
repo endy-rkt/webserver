@@ -1,8 +1,19 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.cpp                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: trazanad <trazanad@student.42antananari    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/06/05 01:58:46 by trazanad          #+#    #+#             */
+/*   Updated: 2025/06/05 02:01:35 by trazanad         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "header.hpp"
 
-int main()
+int	main(void)
 {
-    std::cout << "webserver" << std::endl;
-    runServer();
-    return (0);
+	std::cout << "webserver" << std::endl;
+	return (0);
 }
