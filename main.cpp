@@ -14,7 +14,7 @@
 
 int	main(void)
 {
-	Webserver	server(8080, "0.0.0.0");
+	Webserver	server = Webserver(8080, "0.0.0.0");
 
 	server.serverRun();
 	server.closeServer();
