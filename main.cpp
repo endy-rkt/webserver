@@ -10,10 +10,13 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "header.hpp"
+#include "Webserver.hpp"
 
 int	main(void)
 {
-	std::cout << "webserver" << std::endl;
+	Webserver	server(8080, "0.0.0.0");
+
+	server.serverRun();
+	server.closeServer();
 	return (0);
 }

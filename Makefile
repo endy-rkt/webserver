@@ -1,4 +1,4 @@
-SRCS = main.cpp
+SRCS = main.cpp Webserver.cpp
 
 OBJS = ${SRCS:.cpp=.o}
 
@@ -20,6 +20,7 @@ clean:
 
 fclean: clean
 	${RM} ${NAME}
+	${RM} -r ./.vscode
 
 re: fclean all
 

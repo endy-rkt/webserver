@@ -22,13 +22,19 @@
 
 #include <netinet/in.h>
 
+#include <arpa/inet.h>
+
 #include <unistd.h>
 
 #include <string.h>
 
+#include <errno.h>
+
 #include <cstdlib>
 
 #define PORT 8080
+
+#define ADDR "0.0.0.0"
 
 #define LISTENQ 10
 

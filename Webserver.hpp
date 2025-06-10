@@ -30,16 +30,20 @@ class   Webserver
         int port; 
         int connSock;
         struct sockaddr_in serverAddr;
-        int initSock();
-        int setupServAddr();
-        int serverListen();
+        /*method*/
+        int initSock(void);
+        int setupServAddr(std::string addr);
+        int serverListen(void);
+        int acceptConnection(void);
         
     public:
-        Webserver(void);
+        Webserver(int port, std::string addr);
         ~Webserver(void);
+        Webserver(void);
         Webserver( const Webserver &anotherServ);
         Webserver   &operator=(const Webserver &anotherServ);
-        int run();
+        int serverRun(void);
+        int closeServer(void);
 };
 
 #endif
