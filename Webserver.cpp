@@ -6,7 +6,7 @@
 /*   By: trazanad <trazanad@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/05 02:43:43 by trazanad          #+#    #+#             */
-/*   Updated: 2025/06/12 03:04:16 by trazanad         ###   ########.fr       */
+/*   Updated: 2025/06/12 03:19:13 by trazanad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,13 +108,10 @@ int Webserver::acceptConnection(void)
     if (clientSock < 0)
     {
         std::cout << strerror(errno) << std::endl;
-        // return (1);
         return (-1);
     }
     /*1337*/
     std::cout << "Client " << inet_ntoa(clientAddr.sin_addr) << " connected using " << ntohs(clientAddr.sin_port) << std::endl; 
-    // close(clientSock);
-    // return (0);
     return (clientSock);
 }
 
@@ -160,12 +157,30 @@ std::string Webserver::pollRequest(int clientSock)
     return (request);
 }
 
+int Webserver::formatResponse(char *buffer)
+{
+    int         bufLen;
+    std::string response;
+
+    response = HEADER;
+    response += BODY;
+    bufLen = response.size();
+
+    strncpy(buffer, response.c_str(), RECV_BUFFER);
+    buffer[RECV_BUFFER - 1] = 0;
+    if (bufLen < RECV_BUFFER)
+        buffer[bufLen] = 0;
+    else
+        bufLen = RECV_BUFFER;
+    
+    return (bufLen);
+}
+
 int Webserver::sendResponse(const std::string &request, int clientSock)
 {
     int         status;
     int         bufLen;
-    std::string response;
-    char        buffer[RECV_BUFFER];
+    char        response[RECV_BUFFER];
 
 
     status = 0;
@@ -173,18 +188,14 @@ int Webserver::sendResponse(const std::string &request, int clientSock)
     std::cout << request;
     
     /*send response*/
-    response = HEADER;
-    response += BODY;
-    bufLen = response.size();
-    strcpy(buffer, response.c_str());
-    buffer[bufLen] = 0;
-    status = send(clientSock, buffer, bufLen, 0);
+    bufLen = formatResponse(response);
+    status = send(clientSock, response, bufLen, 0);
     if (status < 0)
     {
         std::cout << strerror(errno) << std::endl;
         return (1);
     }
-    buffer[status] = 0;
+    response[status] = 0;
     return (0);
 }
 

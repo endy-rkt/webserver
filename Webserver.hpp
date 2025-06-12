@@ -6,7 +6,7 @@
 /*   By: trazanad <trazanad@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/05 02:02:17 by trazanad          #+#    #+#             */
-/*   Updated: 2025/06/12 02:50:53 by trazanad         ###   ########.fr       */
+/*   Updated: 2025/06/12 03:18:02 by trazanad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ class   Webserver
         int serverListen(void);
         int acceptConnection(void);
         std::string pollRequest(int clientSock);
+        int formatResponse(char *buffer);
         int sendResponse(const std::string &request, int clientSock);
         int pollingLoop(void);
         
