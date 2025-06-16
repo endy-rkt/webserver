@@ -6,7 +6,7 @@
 /*   By: trazanad <trazanad@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/05 01:59:14 by trazanad          #+#    #+#             */
-/*   Updated: 2025/06/12 03:24:27 by trazanad         ###   ########.fr       */
+/*   Updated: 2025/06/16 10:25:32 by trazanad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,11 +20,15 @@
 
 #include <string>
 
+#include <cstdlib>
+
 #include <sys/socket.h>
 
 #include <netinet/in.h>
 
 #include <arpa/inet.h>
+
+#include <poll.h>
 
 #include <unistd.h>
 
@@ -32,7 +36,7 @@
 
 #include <errno.h>
 
-#include <cstdlib>
+#include <limits.h>
 
 #define PORT 8080
 
@@ -42,6 +46,6 @@
 
 #define RECV_BUFFER 1024
 
-#define CSRF "\n\r\n"
+#define CSRF "\r\n\r\n"
 
 #endif

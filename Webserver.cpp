@@ -6,7 +6,7 @@
 /*   By: trazanad <trazanad@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/05 02:43:43 by trazanad          #+#    #+#             */
-/*   Updated: 2025/06/12 03:19:13 by trazanad         ###   ########.fr       */
+/*   Updated: 2025/06/16 11:16:40 by trazanad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,12 +128,12 @@ int Webserver::serverRun(void)
 {
     if (!this->serverListen())
     {
-        this->pollingLoop();
+        this->serverLoop();
     }
     return (0);
 }
 
-std::string Webserver::pollRequest(int clientSock)
+std::string Webserver::getRequest(int clientSock)
 {
     int         rstLen;
     std::string request;
@@ -199,20 +199,79 @@ int Webserver::sendResponse(const std::string &request, int clientSock)
     return (0);
 }
 
-int Webserver::pollingLoop(void)
+void    Webserver::initiatePollfd(void)
+{
+    for (int i = 0; i < FD_SETSIZE; i++)
+    {
+        this->fds[i].fd = -1;
+    }
+}
+
+int Webserver::setPollfd(int clientSock, int _events, int *maxIndex)
+{    
+    for (int i = 0; i < FD_SETSIZE; i++)
+    {
+        if (this->fds[i].fd < 0)
+        { 
+            this->fds[i].fd = clientSock;
+            this->fds[i].events = _events;
+            if (*maxIndex < i)
+                *maxIndex = i;
+            return (i);
+        }
+    }
+    return (-1);
+}
+
+int Webserver::pollingLoop(int maxIndex, int readyNum)
 {
     int         clientSock;
     std::string request;
 
+    for (int i = 0; i <= maxIndex; i++)
+    {
+        clientSock = this->fds[i].fd;
+        if (clientSock < -1)
+            continue;
+        if (this->fds[i].revents & (POLLIN | POLLERR))
+        {
+            request = this->getRequest(clientSock);
+            sendResponse(request, clientSock);
+            close(clientSock);
+            this->fds[maxIndex].fd = -1;
+            readyNum--;
+            if (readyNum <= 0)
+                break;
+        }
+    }
+    return (0);
+}
+
+int Webserver::serverLoop(void)
+{
+    int             readyNum;
+    int             maxIndex;
+    int             clientSock;
+    std::string     request;
+
+    maxIndex = 0;
     clientSock = -1;
+    this->initiatePollfd();
     for (;;)
     {
         clientSock = this->acceptConnection();
         if (clientSock != -1)
         {
-            request = this->pollRequest(clientSock);
-            sendResponse(request, clientSock);
-            close(clientSock);
+            this->setPollfd(clientSock, POLLIN, &maxIndex);
+            readyNum = poll(this->fds, maxIndex + 1, -1);
+            if ( readyNum < 0)
+            {
+                std::cout << strerror(errno) << std::endl;
+                close(clientSock);
+                this->fds[maxIndex].fd = -1;
+                return (-1);
+            }
+            this->pollingLoop(maxIndex, readyNum);
         }
     }
     return (0);
