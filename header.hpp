@@ -6,7 +6,7 @@
 /*   By: trazanad <trazanad@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/05 01:59:14 by trazanad          #+#    #+#             */
-/*   Updated: 2025/06/16 10:25:32 by trazanad         ###   ########.fr       */
+/*   Updated: 2025/06/16 21:29:18 by trazanad         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,6 @@
 
 #define RECV_BUFFER 1024
 
-#define CSRF "\r\n\r\n"
+#define CRLF "\r\n\r\n"
 
 #endif
