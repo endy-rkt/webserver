@@ -12,16 +12,26 @@ IPPROTO_IP:
 	.long 0	
 
 SOCKADDR_IN:
-	.2byte 0x02   #AF_INET
-	.2byte 0x5000 #port=80
-	.4byte 0x0    #address=0.0.0.0 
-	.8byte 0x0	  #null padding
+	.2byte 0x02   			#AF_INET
+	.2byte 0x5000 			#port=80
+	.4byte 0x0    			#address=0.0.0.0 
+	.8byte 0x0	  			#null padding
 
 ADDR_LEN:
 	.long 16
 
 BACKLOG:
 	.long 0
+
+BASIC_RESPONSE:
+	.ascii "HTTP/1.0 200 OK\r\n\r\n"
+	BASIC_RESPONSE_LEN = . - BASIC_RESPONSE
+
+BUFFER:
+	.space	1024
+
+BUFFER_LEN:
+	.long	1024
 
 .section .text
 
@@ -78,7 +88,26 @@ _start:
 	jb not_storing_socket
 
 	store_client_socket:
-		mov	dword ptr [rsp + 8], eax
+		mov	dword ptr [rsp + 0x8], eax		
+	
+	get_request:
+		#set arg for read_request
+		mov edi, dword ptr [rsp + 0x8]
+		lea rsi, [rip + BUFFER]
+		mov edx, dword ptr [BUFFER_LEN]
+		call read_request
+		#check read done
+
+	send_response:
+		#set arg for write_response
+		mov	edi, dword ptr [rsp + 0x8]
+		lea	rsi, [rip + BASIC_RESPONSE]
+		mov edx, BASIC_RESPONSE_LEN
+		call write_response
+		#check write done
+
+		mov edi, dword ptr [rsp + 0x8]
+		call close_fd
 
 	not_storing_socket:
 		nop
@@ -94,3 +123,19 @@ _start:
 		mov rdi, 1
 		mov rax, 60
 		syscall
+	
+	read_request:
+		mov	rax, 0
+		syscall
+		ret
+	
+	write_response:
+		mov rax, 1
+		syscall
+		ret
+
+	close_fd:
+		mov rax, 3
+		syscall
+		ret
+		
