@@ -23,14 +23,14 @@ ADDR_LEN:
 BACKLOG:
 	.long 0
 
-BASIC_RESPONSE:
+HEADER_OK:
 	.ascii "HTTP/1.0 200 OK\r\n\r\n"
-	BASIC_RESPONSE_LEN = . - BASIC_RESPONSE
+	HEADER_OK_LEN = . - HEADER_OK
 
 BUFFER:
 	.space	1024
 
-BUFFER1:
+PATH_BUFFER:
 	.space	1024
 
 BUFFER_LEN:
@@ -45,7 +45,7 @@ _start:
 	#create space to save variable
 	push rbp
 	mov rbp, rsp
-	sub	rsp, 0x20
+	sub	rsp, 0x30
 
 	socket:
 		mov edi, dword ptr [AF_INET]
@@ -103,7 +103,7 @@ _start:
 		mov edx, dword ptr [BUFFER_LEN]
 		call read_request
 		#get read size
-		mov dword ptr [rsp + 0x10], eax
+		mov dword ptr [rsp + 0x10], eax   #request length
 		#get path
 		call get_path
 		cmp rax, 0x0
@@ -115,25 +115,37 @@ _start:
 		#check open
 		cmp rax, 0x0
 		jle exit_failure
+		mov dword ptr [rsp + 0x20], eax		#path fd
 	
 	read_path_content:
 		mov rdi, rax
-		lea rsi, [rip + BUFFER1] 
+		lea rsi, [rip + PATH_BUFFER] 
 		mov edx, dword ptr [rip + BUFFER_LEN] 
 		call read_request
+		mov dword ptr [rsp + 0x28], eax   #path content length
+		#close path fd
+		mov edi, dword ptr [rsp + 0x20]
+		call close_fd
 
+	send_header:
+		#set arg
+		mov edi, dword ptr [rsp + 0x8]
+		lea rsi, [rip + HEADER_OK]
+		mov edx, HEADER_OK_LEN
+		call write_response
+		
 	send_response:
 		#set arg for write_response
-		lea	rsi, [rip + BUFFER1]
-		mov rdi, rsi
-		call strlen
-		mov rdx, 3
+		lea	rsi, [rip + PATH_BUFFER]
+		mov edx, dword ptr [rsp + 0x28] 
 		mov edi, dword ptr [rsp + 0x8]
 		call write_response
 		#check write done
 
+		#close client fd
 		mov edi, dword ptr [rsp + 0x8]
 		call close_fd
+
 
 	not_storing_socket:
 		nop
@@ -206,7 +218,6 @@ _start:
 			jne remove_first_space
 
 		lea rdi, [rdi + rcx]
-		mov qword ptr [rsp + 0x18], rdi
 		mov rcx, 0
 		remove_second_space:
 			mov dl, byte ptr [rdi + rcx]
@@ -221,5 +232,6 @@ _start:
 		exit_get_path:
 			nop
 		done_trim:
+			mov qword ptr [rsp + 0x18], rdi	#path address ptr
 			mov rax, rdi
 		ret
