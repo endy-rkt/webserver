@@ -30,8 +30,14 @@ BASIC_RESPONSE:
 BUFFER:
 	.space	1024
 
+BUFFER1:
+	.space	1024
+
 BUFFER_LEN:
 	.long	1024
+
+O_RDONLY:
+	.long  0
 
 .section .text
 
@@ -39,7 +45,7 @@ _start:
 	#create space to save variable
 	push rbp
 	mov rbp, rsp
-	sub	rsp, 0x18
+	sub	rsp, 0x20
 
 	socket:
 		mov edi, dword ptr [AF_INET]
@@ -50,10 +56,10 @@ _start:
 	
 	#check socket exist
 	cmp	rax, 0x0
-	jbe exit_failure
+	jle exit_failure
 
 	#store socket fd
-	mov	dword ptr [rsp], eax
+	mov	dword ptr [rsp], eax   #socket fd
 
 	bind:
 		mov	edi, dword ptr [rsp]
@@ -88,7 +94,7 @@ _start:
 	jb not_storing_socket
 
 	store_client_socket:
-		mov	dword ptr [rsp + 0x8], eax		
+		mov	dword ptr [rsp + 0x8], eax	 #client fd	
 	
 	get_request:
 		#set arg for read_request
@@ -96,13 +102,33 @@ _start:
 		lea rsi, [rip + BUFFER]
 		mov edx, dword ptr [BUFFER_LEN]
 		call read_request
-		#check read done
+		#get read size
+		mov dword ptr [rsp + 0x10], eax
+		#get path
+		call get_path
+		cmp rax, 0x0
+		jle exit_failure
+		#open path
+		mov rdi, rax
+		mov esi, dword ptr [rip + O_RDONLY]
+		call open_path
+		#check open
+		cmp rax, 0x0
+		jle exit_failure
+	
+	read_path_content:
+		mov rdi, rax
+		lea rsi, [rip + BUFFER1] 
+		mov edx, dword ptr [rip + BUFFER_LEN] 
+		call read_request
 
 	send_response:
 		#set arg for write_response
-		mov	edi, dword ptr [rsp + 0x8]
-		lea	rsi, [rip + BASIC_RESPONSE]
-		mov edx, BASIC_RESPONSE_LEN
+		lea	rsi, [rip + BUFFER1]
+		mov rdi, rsi
+		call strlen
+		mov rdx, 3
+		mov edi, dword ptr [rsp + 0x8]
 		call write_response
 		#check write done
 
@@ -138,4 +164,62 @@ _start:
 		mov rax, 3
 		syscall
 		ret
+	
+	open_path:
+		mov	rax, 2
+		syscall
+		ret
+	
+	strlen:
+		cmp rdi, 0x0
+		jle done
+		mov rax, 0
+		loop:
+			mov dl, byte ptr [rdi + rax]
+			cmp dl, 0x0
+			je	done
+			inc rax
+			jmp loop
+
+		done:
+			nop
+		ret
+
+	get_path:
+		#check read length
+		mov eax, dword ptr [rsp + 0x10]
+		cmp rax, 0x0
+		jle exit_get_path
+
+		#init register
+		mov	rcx, 0
+		lea rdi, [rip + BUFFER]
+		mov edx, dword ptr [rsp + 0x10]  #max len
+
+		#get first space
+		remove_first_space:
+			mov dl, byte ptr [rdi + rcx]
+			cmp rcx, rdx
+			ja	done_trim
+			inc rcx
+			cmp dl, 0x20 #is_space
+			jne remove_first_space
+
+		lea rdi, [rdi + rcx]
+		mov qword ptr [rsp + 0x18], rdi
+		mov rcx, 0
+		remove_second_space:
+			mov dl, byte ptr [rdi + rcx]
+			cmp rcx, rdx
+			ja	done_trim
+			inc rcx
+			cmp dl, 0x20 #is_space
+			jne remove_second_space
+			dec rcx
+			mov byte ptr [rdi + rcx], 0x0
 		
+		exit_get_path:
+			nop
+		done_trim:
+			mov rax, rdi
+		ret
