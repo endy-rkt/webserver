@@ -92,10 +92,26 @@ _start:
 
 		#check accept error
 		cmp rax, 0x0
-		jb not_storing_socket
+		jl not_storing_socket
 
 		store_client_socket:
 			mov	dword ptr [rsp + 0x8], eax	 #client fd	
+		
+		fork:
+			mov rax, 57
+			syscall
+		
+		#check fork error
+		cmp rax, 0x0
+		je	process_request
+		#close client fd
+		mov edi, dword ptr [rsp + 0x8]
+		call close_fd
+		jmp server_loop
+
+	process_request:
+		mov edi, dword ptr [rsp]
+		call close_fd
 		
 		get_request:
 			#set arg for read_request
@@ -147,12 +163,12 @@ _start:
 			mov edi, dword ptr [rsp + 0x8]
 			call close_fd
 
-		not_storing_socket:
-			#close socket fd
-			mov edi, dword ptr [rsp]
-			call close_fd
-		
-		jmp server_loop
+		jmp exit_success
+
+	not_storing_socket:
+		#close socket fd
+		mov edi, dword ptr [rsp]
+		call close_fd
 
 	exit_success:
 		#clean up stack
