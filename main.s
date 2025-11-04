@@ -82,86 +82,98 @@ _start:
 	cmp rax, 0x0
 	jne exit_failure
 
-	accept:
-		mov edi, dword ptr [rsp]
-		mov rsi, 0
-		mov rdx, 0
-		mov rax, 43
-		syscall
+	server_loop:
+		accept:
+			mov edi, dword ptr [rsp]
+			mov rsi, 0
+			mov rdx, 0
+			mov rax, 43
+			syscall
 
-	#check accept error
-	cmp rax, 0x0
-	jb not_storing_socket
-
-	store_client_socket:
-		mov	dword ptr [rsp + 0x8], eax	 #client fd	
-	
-	get_request:
-		#set arg for read_request
-		mov edi, dword ptr [rsp + 0x8]
-		lea rsi, [rip + BUFFER]
-		mov edx, dword ptr [BUFFER_LEN]
-		call read_request
-		#get read size
-		mov dword ptr [rsp + 0x10], eax   #request length
-		#get path
-		call get_path
+		#check accept error
 		cmp rax, 0x0
-		jle exit_failure
-		#open path
-		mov rdi, rax
-		mov esi, dword ptr [rip + O_RDONLY]
-		call open_path
-		#check open
-		cmp rax, 0x0
-		jle exit_failure
-		mov dword ptr [rsp + 0x20], eax		#path fd
-	
-	read_path_content:
-		mov rdi, rax
-		lea rsi, [rip + PATH_BUFFER] 
-		mov edx, dword ptr [rip + BUFFER_LEN] 
-		call read_request
-		mov dword ptr [rsp + 0x28], eax   #path content length
-		#close path fd
-		mov edi, dword ptr [rsp + 0x20]
-		call close_fd
+		jb not_storing_socket
 
-	send_header:
-		#set arg
-		mov edi, dword ptr [rsp + 0x8]
-		lea rsi, [rip + HEADER_OK]
-		mov edx, HEADER_OK_LEN
-		call write_response
+		store_client_socket:
+			mov	dword ptr [rsp + 0x8], eax	 #client fd	
 		
-	send_response:
-		#set arg for write_response
-		lea	rsi, [rip + PATH_BUFFER]
-		mov edx, dword ptr [rsp + 0x28] 
-		mov edi, dword ptr [rsp + 0x8]
-		call write_response
-		#check write done
+		get_request:
+			#set arg for read_request
+			mov edi, dword ptr [rsp + 0x8]
+			lea rsi, [rip + BUFFER]
+			mov edx, dword ptr [BUFFER_LEN]
+			call read_request
+			#get read size
+			mov dword ptr [rsp + 0x10], eax   #request length
+			#get path
+			call get_path
+			cmp rax, 0x0
+			jle exit_failure
+			#open path
+			mov rdi, rax
+			mov esi, dword ptr [rip + O_RDONLY]
+			call open_path
+			#check open
+			cmp rax, 0x0
+			jle exit_failure
+			mov dword ptr [rsp + 0x20], eax		#path fd
+		
+		read_path_content:
+			mov rdi, rax
+			lea rsi, [rip + PATH_BUFFER]
+			mov edx, dword ptr [rip + BUFFER_LEN]
+			call read_request
+			mov dword ptr [rsp + 0x28], eax   #path content length
+			#close path fd
+			mov edi, dword ptr [rsp + 0x20]
+			call close_fd
 
-		#close client fd
-		mov edi, dword ptr [rsp + 0x8]
-		call close_fd
+		send_header:
+			#set arg
+			mov edi, dword ptr [rsp + 0x8]
+			lea rsi, [rip + HEADER_OK]
+			mov edx, HEADER_OK_LEN
+			call write_response
+			
+		send_response:
+			#set arg for write_response
+			lea	rsi, [rip + PATH_BUFFER]
+			mov edx, dword ptr [rsp + 0x28] 
+			mov edi, dword ptr [rsp + 0x8]
+			call write_response
+			#check write done
 
+			#close client fd
+			mov edi, dword ptr [rsp + 0x8]
+			call close_fd
 
-	not_storing_socket:
-		nop
+		not_storing_socket:
+			#close socket fd
+			mov edi, dword ptr [rsp]
+			call close_fd
+		
+		jmp server_loop
 
 	exit_success:
+		#clean up stack
 		mov	rsp, rbp
+		pop rbp
+		
+		#exit
 		mov rdi, 0
 		mov rax, 60
 		syscall
 
 	exit_failure:
+		#clean up stack
 		mov	rsp, rbp
+		pop rbp
+		
+		#exit
 		mov rdi, 1
 		mov rax, 60
 		syscall
-	
+		
 	read_request:
 		mov	rax, 0
 		syscall
@@ -183,9 +195,9 @@ _start:
 		ret
 	
 	strlen:
+		mov rax, 0
 		cmp rdi, 0x0
 		jle done
-		mov rax, 0
 		loop:
 			mov dl, byte ptr [rdi + rax]
 			cmp dl, 0x0
